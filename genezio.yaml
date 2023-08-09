@@ -1,0 +1,10 @@
+name: langchain-demot
+region: us-east-1
+cloudProvider: genezio
+sdk:
+  language: ts
+  path: ./sdk/
+classes:
+  - path: LlmService.js
+    type: jsonrpc
+    methods: []
