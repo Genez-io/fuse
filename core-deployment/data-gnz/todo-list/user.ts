@@ -1,8 +1,81 @@
 import mongoose from "mongoose"
 import jwt from "jsonwebtoken"
-import { UserModel } from "./models/user"
-import { ActiveSession } from "./models/activeSession"
-import { MONGO_DB_URI, saltedPassword, validatePassword } from "./helper"
+import bcrypt from "bcryptjs"
+
+const userSchema = new mongoose.Schema({
+    name: String,
+    email: String,
+    password: String
+  });
+
+export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
+
+const activeSessionSchema = new mongoose.Schema({
+  token: {
+    type: String,
+    required: true,
+  },
+  userId: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now,
+  },
+});
+
+export const ActiveSession = mongoose.models.ActiveSession || mongoose.model('ActiveSession', activeSessionSchema);
+
+export type AuthResponse = {
+  success: boolean,
+  msg?: string
+}
+
+export async function validatePassword(saltedPassword: string, password: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    bcrypt.compare(password, saltedPassword, async function (err, res) {
+      if (err) {
+        throw err
+      }
+      
+      if (res) {
+        resolve(true)
+      } else {
+        resolve(false)
+      }
+    });
+  });
+}
+
+export async function saltedPassword(password: string): Promise<string> {
+  return new Promise((resolve) => {
+    bcrypt.genSalt(2, function (err, salt) {
+      if (err) {
+        throw err
+      }
+
+      bcrypt.hash(password, salt, async function (err, hash) {
+        if (err) {
+          throw err
+        }
+
+        resolve(hash);
+      });
+    });
+  });
+}
+
+export async function reqAuth(token: string): Promise<AuthResponse> {
+  const session = await ActiveSession.find({ token: token });
+  if (session.length == 1) {
+    return { success: true };
+  } else {
+    return { success: false, msg: "User is not logged on" };
+  }
+}
+
 
 export type CreateUserResponse = {
   success: boolean,
@@ -31,14 +104,7 @@ export type CheckSessionResponse = {
  */
 export class UserService {
   constructor() {
-    this.#connect();
-  }
-
-  /**
-   * Private method used to connect to the DB.
-   */
-  #connect() {
-    mongoose.connect(MONGO_DB_URI);
+    mongoose.connect("mongodb+srv://genezio:genezio@cluster0.c6qmwnq.mongodb.net/?retryWrites=true&w=majority");
   }
 
   /**

@@ -1,6 +1,27 @@
 import mongoose from "mongoose"
-import { reqAuth, MONGO_DB_URI } from "./helper"
-import { TaskModel } from "./models/task"
+
+const taskSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
+  },
+  ownerId: {
+    type: String,
+    required: true
+  },
+  solved: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now
+  }
+});
+
+export const TaskModel = mongoose.models.Task || mongoose.model("Task", taskSchema);
 
 export type Task = {
   _id: string,
@@ -33,14 +54,7 @@ export type DeleteTaskResponse = {
  */
 export class TaskService {
   constructor() {
-    this.#connect();
-  }
-
-  /**
-   * Private method used to connect to the DB.
-   */
-  #connect() {
-    mongoose.connect(MONGO_DB_URI);
+    mongoose.connect("mongodb+srv://genezio:genezio@cluster0.c6qmwnq.mongodb.net/?retryWrites=true&w=majority");
   }
 
   /**
@@ -49,17 +63,12 @@ export class TaskService {
    * 
    * The method will be exported via SDK using genezio.
    * 
-   * @param {*} token The user's token.
    * @param {*} userId The user ID.
    * @returns An object containing two properties: { success: true, tasks: tasks }
    */
-  async getAllTasksByUser(token: string, userId: string): Promise<GetTasksResponse> {
+  async getAllTasksByUser(userId: string): Promise<GetTasksResponse> {
     console.log(`Get all tasks by user request received with userID ${userId}`)
 
-    const authObject = await reqAuth(token);
-    if (!authObject.success) {
-      return { success: false, tasks: [] };
-    }
     const tasks = (await TaskModel.find({ ownerId: userId }))
       .map((task) => ({
         title: task.title,
@@ -77,18 +86,13 @@ export class TaskService {
    * 
    * The method will be exported via SDK using genezio.
    * 
-   * @param {*} token The user's token.
    * @param {*} title The tasktitle.
    * @param {*} ownerId The owner's of the task ID.
    * @returns An object containing two properties: { success: true, tasks: tasks }
    */
-  async createTask(token: string, title: string, ownerId: string): Promise<GetTaskResponse> {
+  async createTask(title: string, ownerId: string): Promise<GetTaskResponse> {
     console.log(`Create task request received for user with id ${ownerId} with title ${title}`)
 
-    const authObject = await reqAuth(token);
-    if (!authObject.success) {
-      return { success: false };
-    }
     const task = await TaskModel.create({
       title: title,
       ownerId: ownerId
@@ -106,19 +110,14 @@ export class TaskService {
    * 
    * The method will be exported via SDK using genezio.
    * 
-   * @param {*} token The user's token.
    * @param {*} id The task's id.
    * @param {*} title The task's title.
    * @param {*} solved If the task is solved or not.
    * @returns An object containing two properties: { success: true }
    */
-  async updateTask(token: string, id: string, title: string, solved: boolean): Promise<UpdateTaskResponse> {
+  async updateTask(id: string, title: string, solved: boolean): Promise<UpdateTaskResponse> {
     console.log(`Update task request received with id ${id} with title ${title} and solved value ${solved}`)
 
-    const authObject = await reqAuth(token);
-    if (!authObject.success) {
-      return authObject;
-    }
     await TaskModel.updateOne(
       { _id: id },
       {
@@ -136,17 +135,12 @@ export class TaskService {
    * 
    * The method will be exported via SDK using genezio.
    * 
-   * @param {*} token The user's token.
    * @param {*} title The tasktitle.
    * @returns An object containing one property: { success: true }
    */
-  async deleteTask(token: string, id: string): Promise<DeleteTaskResponse> {
+  async deleteTask(id: string): Promise<DeleteTaskResponse> {
     console.log(`Delete task with id ${id} request received`)
 
-    const authObject = await reqAuth(token);
-    if (!authObject.success) {
-      return authObject;
-    }
     await TaskModel.deleteOne({ _id: id });
 
     return { success: true };
