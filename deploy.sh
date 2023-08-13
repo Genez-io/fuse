@@ -10,9 +10,9 @@ git pull origin main
 echo "installing dependencies"
 npm install
 
-# # build the application
-# echo "building application"
-# npm run build
+# build the application
+echo "building application"
+npm run build
 
 # run the application
 echo "starting the application"
