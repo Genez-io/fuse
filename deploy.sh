@@ -3,7 +3,7 @@
 echo "starting deployment process"
 
 # download new version of our application
-cd ./core-deployment
+cd /home/ubuntu/fuse/core-deployment
 git pull origin main
 
 # install all the dependencies
