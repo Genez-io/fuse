@@ -51,6 +51,10 @@ app.use(bodyParser.json());
 // Initialize routes middleware
 app.use("/api/v1/deploy", deploymentRoute);
 
+app.get("/", (_req, res) => {
+  res.send("Hello World!");
+});
+
 
 const PORT = process.env.PORT;
 http.createServer(app).listen(PORT, function () {
