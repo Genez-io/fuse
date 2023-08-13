@@ -1,14 +1,19 @@
 import express from "express";
-import exec from "await-exec-typescript"
+import Exec from "await-exec-typescript";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { getUsedNodeModules } from "../utils/getNodeModules";
-import { LlmService } from "../LlmService";
-import { tsconfigStr } from "../utils/tsconfig";
-import { generateGenezioYaml } from "../utils/genezioYaml";
+import { LlmService } from "./../LlmService.js";
+import { tsconfigStr } from "./../utils/tsconfig.js";
+import { generateGenezioYaml } from "./../utils/genezioYaml.js";
+import { getUsedNodeModules } from "./../utils/getNodeModules.js";
 
 const router = express.Router();
+
+const exec = Exec.default;
+
+
+
 
 
 router.post("/", async (req, res) => {
@@ -146,6 +151,4 @@ router.post("/", async (req, res) => {
 });
 
 
-
-
-module.exports = router;
+export default router;

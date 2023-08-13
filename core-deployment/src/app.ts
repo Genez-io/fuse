@@ -1,4 +1,5 @@
-require("dotenv").config();
+import * as dotenv from "dotenv";
+dotenv.config();
 
 import bodyParser from "body-parser";
 import compression from "compression";
@@ -8,6 +9,9 @@ import path from "path";
 import winston from "winston";
 // const helmet = require("helmet");
 
+import * as router from "./routes/deployment.js";
+
+const deploymentRoute = router.default;
 
 import express from 'express';
 
@@ -45,10 +49,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Initialize routes middleware
-app.use("/api/v1/deploy", require("./routes/deployment"));
+app.use("/api/v1/deploy", deploymentRoute);
 
-global.appRoot = path.resolve(__dirname);
-console.log(path.resolve(__dirname));
 
 const PORT = process.env.PORT;
 http.createServer(app).listen(PORT, function () {
