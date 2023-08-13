@@ -19,7 +19,6 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@lancedb/vectordb-darwin-arm64": "^0.1.19",
     "await-exec": "^0.1.2",
     "cheerio": "^1.0.0-rc.12",
     "compression": "^1.7.4",
@@ -28,6 +27,7 @@
     "epub2": "^3.0.1",
     "express": "^4.17.1",
     "faiss-node": "^0.2.3",
+    "lancedb": "^0.0.1",
     "langchain": "^0.0.127",
     "pickleparser": "^0.1.0",
     "puppeteer": "^19.11.1",
