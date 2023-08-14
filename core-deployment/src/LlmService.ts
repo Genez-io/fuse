@@ -51,7 +51,7 @@ Your task is to write a ${classInfo} class in TypeScript that implements the fol
 
 3. Utilize the ${dbOrm} ORM to establish a connection to a database. Connect to the database as follows: \`${mongoose_URI}\`.
 
-4. Use any necessary npmjs packages for your implementation. Feel free to leverage these packages as needed to enhance the functionality of your class. However, refrain from relying on any external files.
+4. Use any necessary npmjs packages for your implementation. Feel free to leverage these packages as needed to enhance the functionality of your class. Never use any external files.
 
 5. Your class should include specific methods such as ${functionsListStr}. Ensure that you provide the implementation for each of these methods. For the return values of these methods, utilize DTOs (Data Transfer Objects) to organize and structure the output.
 

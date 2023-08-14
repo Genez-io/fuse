@@ -64,11 +64,15 @@ router.post("/", async (req, res) => {
       exec(`npm i -D ${devNodeModules.join(" ")}`, {
         cwd: folderPath,
         log: false
+      }).catch((err) => {
+        console.log("npm i -D err", err);
       }),
       exec(`npm i -D @types/node`, {
         cwd: folderPath,
         log: false
-      }),
+      }).catch((err) => {
+        console.log("npm i -D err", err);
+      })
     ]).catch((err) => {
       console.log("npm i -D err", err);
     });
@@ -103,9 +107,23 @@ router.post("/", async (req, res) => {
       return {content: fileContent.toString()
         , name: file};
     });
+
+    const projectFiles: {content: string, name: string}[] = fs.readdirSync(folderPath).filter((file) => {
+      // check if the file is not a folder
+      if (fs.lstatSync(path.join(folderPath, file)).isDirectory()) {
+        return false;
+      }
+      return true;
+    }).map((file) => {
+      const fileContent = fs.readFileSync(path.join(folderPath, file));
+      return {content: fileContent.toString()
+        , name: file};
+    });
+
     return res.json({
       link,
-      sdkFiles
+      sdkFiles,
+      projectFiles
     });
   }
 
