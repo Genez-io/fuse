@@ -39,7 +39,6 @@ export async function validatePassword(saltedPassword: string, password: string)
       if (err) {
         throw err
       }
-      
       if (res) {
         resolve(true)
       } else {
@@ -109,9 +108,9 @@ export class UserService {
 
   /**
    * Method that can be used to create a new user.
-   * 
+   *
    * The method will be exported via SDK using genezio.
-   * 
+   *
    * @param {*} name The user's name.
    * @param {*} email The user's email.
    * @param {*} password The user's password.
@@ -138,12 +137,12 @@ export class UserService {
 
   /**
    * Method that can be used to obtain a login token for a giving user.
-   * 
+   *
    * The method will be exported via SDK using genezio.
-   * 
+   *
    * @param {*} email The user's email.
    * @param {*} password The user's password.
-   * @returns 
+   * @returns
    */
   async login(email: string, password: string): Promise<UserLoginResponse> {
     console.log(`Login request received for user with email ${email}`)
@@ -175,7 +174,7 @@ export class UserService {
 
   /**
    * Methods that receives a token and confirms if it is valid or not.
-   * 
+   *
    * @param {*} token The user's token.
    * @returns An object containing a boolean property "success" which is true if the token is valid, false otherwise.
    */

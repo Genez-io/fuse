@@ -1,8 +1,88 @@
 import mongoose from "mongoose"
 import jwt from "jsonwebtoken"
-import { UserModel } from "../models/user"
-import { ActiveSession } from "../models/activeSession"
-import { MONGO_DB_URI, saltedPassword, validatePassword } from "../helper"
+import bcrypt from "bcryptjs"
+
+const userSchema = new mongoose.Schema({
+    name: String,
+    email: String,
+    password: String,
+    settings: {
+        phone: String,
+        poemSettings: {
+            poemAdjective: String,
+            words: [String],
+        },
+        hour: Number,
+    },
+    poems: [String]
+  });
+
+export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
+
+const activeSessionSchema = new mongoose.Schema({
+  token: {
+    type: String,
+    required: true,
+  },
+  userId: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now,
+  },
+});
+
+export const ActiveSession = mongoose.models.ActiveSession || mongoose.model('ActiveSession', activeSessionSchema);
+
+export type AuthResponse = {
+  success: boolean,
+  msg?: string
+}
+
+export async function validatePassword(saltedPassword: string, password: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    bcrypt.compare(password, saltedPassword, async function (err: any, res: any) {
+      if (err) {
+        throw err
+      }
+      if (res) {
+        resolve(true)
+      } else {
+        resolve(false)
+      }
+    });
+  });
+}
+
+export async function saltedPassword(password: string): Promise<string> {
+  return new Promise((resolve) => {
+    bcrypt.genSalt(2, function (err: any, salt: any) {
+      if (err) {
+        throw err
+      }
+
+      bcrypt.hash(password, salt, async function (err: any, hash: any) {
+        if (err) {
+          throw err
+        }
+
+        resolve(hash);
+      });
+    });
+  });
+}
+
+export async function reqAuth(token: string): Promise<AuthResponse> {
+  const session = await ActiveSession.find({ token: token });
+  if (session.length == 1) {
+    return { success: true };
+  } else {
+    return { success: false, msg: "User is not logged on" };
+  }
+}
 
 export type UserSettings = {
     phone?: string | undefined,
@@ -45,14 +125,14 @@ export class UserService {
      * Private method used to connect to the DB.
      */
     #connect() {
-        mongoose.connect(MONGO_DB_URI);
+        mongoose.connect("mongodb+srv://genezio:genezio@cluster0.c6qmwnq.mongodb.net/?retryWrites=true&w=majority");
     }
 
     /**
      * Method that can be used to create a new user.
-     * 
+     *
      * The method will be exported via SDK using genezio.
-     * 
+     *
      * @param {*} name The user's name.
      * @param {*} email The user's email.
      * @param {*} password The user's password.
@@ -88,12 +168,12 @@ export class UserService {
 
     /**
      * Method that can be used to obtain a login token for a giving user.
-     * 
+     *
      * The method will be exported via SDK using genezio.
-     * 
+     *
      * @param {*} email The user's email.
      * @param {*} password The user's password.
-     * @returns 
+     * @returns
      */
     async login(email: string, password: string): Promise<AuthResult> {
         console.log(`Loginn request received for user with email ${email}`)
@@ -129,7 +209,7 @@ export class UserService {
 
     /**
      * Methods that receives a token and confirms if it is valid or not.
-     * 
+     *
      * @param {*} token The user's token.
      * @returns An object containing a boolean property "success" which is true if the token is valid, false otherwise.
      */

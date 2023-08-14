@@ -1,11 +1,50 @@
-import { MONGO_DB_URI, GOOGLE_CLIENT_ID, TOKEN_SECRET } from "./config";
 import mongoose from "mongoose";
 import { LoginTicket, OAuth2Client, TokenPayload } from "google-auth-library";
 import jwt from "jsonwebtoken";
 
-import { UserModel } from "./models/user";
-import { ActiveSession } from "./models/activeSession";
+const activeSessionSchema = new mongoose.Schema({
+  token: {
+    type: String,
+    required: true,
+  },
+  userId: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now,
+  },
+});
 
+export const ActiveSession = mongoose.models.ActiveSession || mongoose.model('ActiveSession', activeSessionSchema);
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  profilePicUrl: {
+    type: String,
+    required: true,
+  },
+  accountType: {
+    type: String,
+    required: true,
+    default: 'google'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+});
+
+export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
 
 export type GoogleLoginResponse = {
   success: boolean;
@@ -33,7 +72,7 @@ export class UsersHandler {
    * Private method used to connect to the DB.
    */
   #connect() {
-    mongoose.connect(MONGO_DB_URI).then(() => {
+    mongoose.connect("mongodb+srv://genezio:genezio@cluster0.c6qmwnq.mongodb.net/?retryWrites=true&w=majority").then(() => {
       console.log("Connected to MongoDB");
     }).catch((err) => {
       console.log("MONGO_CONNECT_ERR:" + err);
@@ -47,7 +86,7 @@ export class UsersHandler {
     if (!googleToken) {
       return { success: false, msg: "There was an error. Please try again" };
     }
-  
+
     let payload: TokenPayload | undefined;
     try {
       const ticket: LoginTicket = await client.verifyIdToken({
