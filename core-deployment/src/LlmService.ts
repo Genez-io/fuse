@@ -49,7 +49,7 @@ Your task is to write a ${classInfo} class in TypeScript that implements the fol
 
 2. Within the class, ensure that you utilize type annotations for every variable and parameter. This helps maintain strong typing throughout your implementation.
 
-3. Utilize the ${dbOrm} ORM to establish a connection to a database. Connect to the database as follows: \`${mongoose_URI}\`. Create the models for the database as needed in the same file as your class.
+3. Utilize the ${dbOrm} ORM to establish a connection to a database. Connect to the database as using the following function, without any addtion: \`${mongoose_URI}\`. Create the models for the database as needed in the same file as your class.
 
 4. Use any necessary npmjs packages for your implementation. Feel free to leverage these packages as needed to enhance the functionality of your class. Never use any external files.
 
