@@ -40,8 +40,23 @@ export class LlmService {
 
 		const dbOrm = "mongoose";
 		const functionsListStr = functionsList.join(", ");
+		const mongoose_URI = `mongoose.connect("mongodb+srv://genezio:genezio@cluster0.c6qmwnq.mongodb.net/?retryWrites=true&w=majority")`
 
-		const query = `Write me an backend class in typescript that implements a ${classInfo}. Start the class with 'export class <class_name> {. Use only types, without interfaces. Use ${dbOrm} orm to connect to the database and connect in a classic way with 'mongoose.connect("mongodb+srv://genezio:genezio@cluster0.c6qmwnq.mongodb.net/?retryWrites=true&w=majority")' and create classic models. Use any npmjs package you need, without any external file. The class should have the following methods with implementation included: ${functionsListStr}. Use DTOS for the output of the functions. Show me only the source code. Do not include anything else.`;
+		const query = `
+Your task is to write a ${classInfo} class in TypeScript that implements the following functions: ${functionsListStr} by following the next steps:
+
+1. Write a TypeScript backend class that implements a ${classInfo}. Begin the class declaration by using the following line: \`export class <class_name>\`.
+
+2. Within the class, ensure that you utilize type annotations for every variable and parameter. This helps maintain strong typing throughout your implementation.
+
+3. Utilize the ${dbOrm} ORM to establish a connection to a database. Connect to the database as follows: \`${mongoose_URI}\`.
+
+4. Use any necessary npmjs packages for your implementation. Feel free to leverage these packages as needed to enhance the functionality of your class. However, refrain from relying on any external files.
+
+5. Your class should include specific methods such as ${functionsListStr}. Ensure that you provide the implementation for each of these methods. For the return values of these methods, utilize DTOs (Data Transfer Objects) to organize and structure the output.
+
+6. When presenting your source code, make sure to format it within triple backticks \`\`\`. This formatting helps maintain clarity and readability. Include only the source code itself within the triple backticks, without adding any additional text.
+`;
 
 		const res = await qa.call({
 			query: query,
