@@ -13,12 +13,16 @@ const router = express.Router();
 const exec = Exec.default;
 
 router.post("/", async (req, res) => {
-  const { classInfo, functionsList } = req.body;
+  const { classInfo, functionsList, genezioToken } = req.body;
 
   if (!classInfo || !functionsList ) {
     return res.status(400).json({
       message: "Missing required parameters",
     });
+  }
+
+  if (!genezioToken) {
+    console.log("Warning: no genezio token provided. We will use the default token for this demo.");
   }
 
   const folderName = `genezio-${Math.random().toString(36).substring(7)}`;
@@ -78,7 +82,7 @@ router.post("/", async (req, res) => {
     });
 
 
-    const output = await exec(`genezio deploy --install-deps`, {
+    const output = await exec(`GENEZIO_TOKEN=${genezioToken} genezio deploy --install-deps`, {
       cwd: folderPath,
       log: false
     }).catch((err: any) => {
