@@ -5,20 +5,16 @@ import bodyParser from "body-parser";
 import compression from "compression";
 import http from "http";
 import cors from "cors";
-import path from "path";
 import winston from "winston";
-// const helmet = require("helmet");
+import express from 'express';
 
 import * as router from "./routes/deployment.js";
 
 const deploymentRoute = router.default;
 
-import express from 'express';
-
 // Instantiate express
 const app = express();
 app.use(compression());
-
 
 // logger
 const consoleTransport = new winston.transports.Console();
@@ -41,7 +37,6 @@ app.use(logError);
 
 app.use(cors());
 
-
 // Express body parser
 app.use("/public", express.static("public"));
 
@@ -55,8 +50,12 @@ app.get("/", (_req, res) => {
   res.send("Hello World");
 });
 
-
 const PORT = process.env.PORT;
+// check if PORT is defined
+if (!PORT) {
+  throw new Error("PORT is not defined");
+}
+
 http.createServer(app).listen(PORT, function () {
   console.log(
     "App listening on port " + PORT + "! Go to http://localhost:" + PORT + "/"

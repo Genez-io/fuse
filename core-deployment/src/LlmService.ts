@@ -1,30 +1,21 @@
-import * as fs from "fs";
-import * as path from "path";
-import os from "os";
-
-// Vector Support
-import { FaissStore } from "langchain/vectorstores/faiss";
-
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-
-// The LangChain component we'll use to get the documents
 import { RetrievalQAChain } from "langchain/chains";
-
-// Text splitters
-import { TextLoader } from "langchain/document_loaders";
-
 import { OpenAI } from "langchain/llms/openai";
 
 import { connect } from "vectordb";
 import { LanceDB } from "langchain/vectorstores/lancedb";
 
-
-
+import dotenv from "dotenv";
+dotenv.config();
 
 export class LlmService {
 	static async callGpt(classInfo: string, functionsList: string[]) {
-		const openai_api_key = "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";
+		const openai_api_key = process.env.OPENAI_API_KEY;
+		// check if openai api key is set
+		if (!openai_api_key) {
+			throw new Error("You need to provide an OpenAI API key. Go to https://platform.openai.com/account/api-keys to get one.");
+		}
+
 		const llm = new OpenAI({
 			modelName: "gpt-4",
 			openAIApiKey: openai_api_key,
@@ -36,7 +27,6 @@ export class LlmService {
 
 		let embeddings = new OpenAIEmbeddings({ openAIApiKey: openai_api_key });
 
-
 		//table to base retrievar
 		const vectorStore = await LanceDB.fromDocuments(
 			[],
@@ -45,12 +35,9 @@ export class LlmService {
 		);
 
 		const retriever = vectorStore.asRetriever();
-		
 
 		const qa = RetrievalQAChain.fromLLM(llm, retriever);
-		
 
-		// const classInfo = "EmailService";
 		const dbOrm = "mongoose";
 		const functionsListStr = functionsList.join(", ");
 
@@ -60,16 +47,12 @@ export class LlmService {
 			query: query,
 		});
 
-		console.log(res);
-
 		// get the source code between ``` and ``` and remove the first line if it doesn't start with import
 		let sourceCode = res.text.split("```")[1];
 		const firstLine = sourceCode.split("\n")[0];
 		if (!firstLine.startsWith("import")) {
 			sourceCode = sourceCode.split("\n").slice(1).join("\n");
 		}
-
-		
 		// get className from export class <class_name>
 		const className = sourceCode.split("export class ")[1].split(" ")[0];
 
@@ -77,7 +60,7 @@ export class LlmService {
 		console.log({ sourceCode, className });
 		return {
 			classCode: sourceCode,
-			className: className
+			className: className,
 		};
 	}
 }

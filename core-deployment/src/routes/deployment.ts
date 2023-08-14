@@ -12,27 +12,22 @@ const router = express.Router();
 
 const exec = Exec.default;
 
-
-
-
-
 router.post("/", async (req, res) => {
   const { classInfo, functionsList, genezioToken } = req.body;
-  // const { genezioToken, classCode, className } = req.body;
 
-  // if (!genezioToken || !classCode || !className) {
-  //   return res.status(400).json({
-  //     message: "Missing required parameters",
-  //   });
-  // }
+  if (!classInfo || !functionsList || !genezioToken) {
+    return res.status(400).json({
+      message: "Missing required parameters",
+    });
+  }
 
-  // const genezioToken = "9e4eda8cc8540b48b18765b012495bd8a46730ef40b97c6725e9376e94fc19bdd93b8d0a09da143d92003d81b19a517dd3e7debbf1a135b5d0d785f12c12cc08";
   const folderName = `genezio-${Math.random().toString(36).substring(7)}`;
   const folderPath = path.join(os.tmpdir(), folderName);
-
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath);
   }
+
+  console.log("Folder path:", folderPath);
 
   let link;
   let sdkFiles;
@@ -117,12 +112,6 @@ router.post("/", async (req, res) => {
   return res.status(400).json({
     message: "Error generating and deploying the project. This is just a proof of concept, so it might not work all the time.",
   });
-
-
-  
-
-  
 });
-
 
 export default router;

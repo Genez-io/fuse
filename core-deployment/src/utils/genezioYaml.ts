@@ -1,5 +1,3 @@
-
-
 export function generateGenezioYaml(folderName: string, className: string): string {
   return `name: ${folderName}
 region: us-east-1

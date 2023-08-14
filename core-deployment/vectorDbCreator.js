@@ -7,7 +7,17 @@ import { TextLoader } from "langchain/document_loaders/fs/text";
 import { connect } from "vectordb";
 import { LanceDB } from "langchain/vectorstores/lancedb";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 async function createdTestDb() {
+  const openai_api_key = process.env.OPENAI_API_KEY;
+
+  // check if openai api key is set
+  if (!openai_api_key) {
+    throw new Error("You need to provide an OpenAI API key. Go to https://platform.openai.com/account/api-keys to get one.");
+  }
+
   try {
     fs.mkdirSync("vectordb");
   } catch (e) {
@@ -15,7 +25,6 @@ async function createdTestDb() {
   }
 
   const db = await connect("vectordb");
-  const openai_api_key = "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";
 
   let embeddings = new OpenAIEmbeddings({ openAIApiKey: openai_api_key });
 
@@ -54,12 +63,11 @@ async function createdTestDb() {
     { table }
   );
 
-  return "vectordb";
+  return vectorStore;
 }
 
 (async () => {
-  console.log("Creating test db");
+  console.log("Creating LanceDB vector table..");
   const db = await createdTestDb();
-  console.log(db)
-  console.log("Created test db");
+  console.log("Successfully created LanceDB vector table.");
 })();

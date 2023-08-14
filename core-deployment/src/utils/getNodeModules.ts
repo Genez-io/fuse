@@ -1,6 +1,5 @@
 import ts from "typescript";
 import * as fs from "fs";
-import * as path from "path";
 
 function extractImports(sourceFile: ts.SourceFile): string[] {
     const imports: string[] = [];
