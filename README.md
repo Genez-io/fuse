@@ -1,6 +1,7 @@
-# FUSE - Full Stack Software Engine
 
 <div align="center">
+
+<h1> FUSE - Full Stack Software Engine </h1>
 <h2>AI-driven platform that generates working web applications</h2>
 <h3> <u><a href="https://fuse.app.genez.io"> FUSE Demo - Try it out yourself! </a></u> </h3>
 </div>
