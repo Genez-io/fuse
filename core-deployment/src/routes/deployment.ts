@@ -13,9 +13,9 @@ const router = express.Router();
 const exec = Exec.default;
 
 router.post("/", async (req, res) => {
-  const { classInfo, functionsList, genezioToken } = req.body;
+  const { classInfo, functionsList } = req.body;
 
-  if (!classInfo || !functionsList || !genezioToken) {
+  if (!classInfo || !functionsList ) {
     return res.status(400).json({
       message: "Missing required parameters",
     });
