@@ -17,7 +17,6 @@ const exec = Exec.default;
 
 
 router.post("/", async (req, res) => {
-  // classInfo: string, functionsList: string[]
   const { classInfo, functionsList, genezioToken } = req.body;
   // const { genezioToken, classCode, className } = req.body;
 
@@ -35,118 +34,93 @@ router.post("/", async (req, res) => {
     fs.mkdirSync(folderPath);
   }
 
-  const {classCode, className} = await LlmService.callGpt(classInfo, functionsList);
+  let link;
+  let sdkFiles;
+
+  for (let i = 0; i < 4; i++) {
+    const {classCode, className} = await LlmService.callGpt(classInfo, functionsList);
+    // write the class code in the folder
+    fs.writeFileSync(path.join(folderPath, className + ".ts"), classCode);
+
+    // write to folder genezio.yaml and tsconfig.json
+    fs.writeFileSync(path.join(folderPath, "genezio.yaml"), generateGenezioYaml(folderName, className));
+    fs.writeFileSync(path.join(folderPath, "tsconfig.json"), tsconfigStr);
+
+    // get all node modules used in the class
+    const nodeModules = getUsedNodeModules(path.join(folderPath, className + ".ts"));
+
+    // run npm i for each node module
+    const { stdout, stderr } = await exec(
+      `npm i ${nodeModules.join(" ")}`,
+      {
+        cwd: folderPath,
+        log: false
+      }
+    );
+    console.log("npm i stdout", stdout);
+    console.log("npm i stderr", stderr);
+
+    const devNodeModules = nodeModules.map((nodeModule) => {
+      return `@types/${nodeModule}`;
+    });
+
+    // npm i all dev dependencies as well (for typescript)
+    await Promise.all([
+      exec(`npm i -D ${devNodeModules.join(" ")}`, {
+        cwd: folderPath,
+        log: false
+      }),
+      exec(`npm i -D @types/node`, {
+        cwd: folderPath,
+        log: false
+      }),
+    ]).catch((err) => {
+      console.log("npm i -D err", err);
+    });
 
 
-  // write the class code in the folder
-  fs.writeFileSync(path.join(folderPath, className + ".ts"), classCode);
-
-  // write to folder genezio.yaml and tsconfig.json
-  fs.writeFileSync(path.join(folderPath, "genezio.yaml"), generateGenezioYaml(folderName, className));
-  fs.writeFileSync(path.join(folderPath, "tsconfig.json"), tsconfigStr);
-
-  // get all node modules used in the class
-  const nodeModules = getUsedNodeModules(path.join(folderPath, className + ".ts"));
-
-  // run npm i for each node module
-  const { stdout, stderr } = await exec(
-    `npm i ${nodeModules.join(" ")}`,
-    {
+    const output = await exec(`genezio deploy --install-deps`, {
       cwd: folderPath,
       log: false
+    }).catch((err: any) => {
+      console.log("genezio deploy err", err);
+      return err;
+    });
+
+    console.log(output);
+
+
+    if (!output.stdout?.includes("Your backend project has been deployed")) {
+      console.log("CONTINUE WITH NEXT ITERATION");
+      continue;
     }
-  );
-  console.log("npm i stdout", stdout);
-  console.log("npm i stderr", stderr);
-
-  const devNodeModules = nodeModules.map((nodeModule) => {
-    return `@types/${nodeModule}`;
-  });
-
-  // npm i all dev dependencies as well (for typescript)
-  await Promise.all([
-    exec(`npm i -D ${devNodeModules.join(" ")}`, {
-      cwd: folderPath,
-      log: false
-    }),
-    exec(`npm i -D @types/node`, {
-      cwd: folderPath,
-      log: false
-    }),
-  ]).catch((err) => {
-    console.log("npm i -D err", err);
-  });
 
 
-  // // run tsc on the class and get the output
-  // const { stdout: tscStdout, stderr: tscStderr } = await exec(
-  //   `tsc -t es5 ${className}.ts`,
-  //   {
-  //     cwd: folderPath,
-  //   }
-  // ).catch((err: any) => {
-  //   console.log("tsc err", err);
-  //   return err;
-  // });
+    // get the link from the output between 'available at ' and '\n'
+    link = output.stdout.split("available at ")[1].split("\n")[0];
 
-  // console.log("tscStdout", tscStdout);
+    // read all files from the folderPath + sdk and add them to an array
+    const filesSdk = fs.readdirSync(path.join(folderPath, "sdk"));
 
-  // // if there is an error, return it and res.send the err
-  // if (tscStderr || tscStdout.includes("error")) {
-  //   return res.status(400).json({
-  //     message: "Error in class code",
-  //     error: tscStderr,
-  //     tscStdout,
-  //   });
-  // }
-
-
-  await exec(`genezio login ${genezioToken}`, {
-    cwd: folderPath,
-    log: false
-  }).catch((err: any) => {
-    console.log("genezio login err", err);
-  });
-
-  const output = await exec(`genezio deploy --install-deps`, {
-    cwd: folderPath,
-    log: false
-  }).catch((err: any) => {
-    console.log("genezio deploy err", err);
-    return err;
-  });
-
-  if (output.stderr) {
-    return res.status(400).json({
-      message: "Error in class code",
-      error: output.stderr,
-      output,
+    // for each file, read the file and add it to the output
+    sdkFiles = filesSdk.map((file) => {
+      const fileContent = fs.readFileSync(path.join(folderPath, "sdk", file));
+      return {content: fileContent.toString()
+        , name: file};
+    });
+    return res.json({
+      link,
+      sdkFiles
     });
   }
 
-  console.log(output);
-
-  // get the link from the output between 'available at ' and '\n'
-  const link = output.stdout.split("available at ")[1].split("\n")[0];
-
-  // read all files from the folderPath + sdk and add them to an array
-  const filesSdk = fs.readdirSync(path.join(folderPath, "sdk"));
-
-  // for each file, read the file and add it to the output
-  const sdkFiles = filesSdk.map((file) => {
-    const fileContent = fs.readFileSync(path.join(folderPath, "sdk", file));
-    return {content: fileContent.toString()
-      , name: file};
+  return res.status(400).json({
+    message: "Error generating and deploying the project. This is just a proof of concept, so it might not work all the time.",
   });
 
 
   
-  return res.json({
-    nodeModules,
-    output,
-    link,
-    sdkFiles
-  });
+
   
 });
 
