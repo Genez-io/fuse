@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
 
   if (!classInfo || !functionsList ) {
     return res.status(400).json({
-      message: "Missing required parameters",
+      message: "Please complete all the required fields.",
     });
   }
 
@@ -86,6 +86,17 @@ router.post("/", async (req, res) => {
       cwd: folderPath,
       log: false
     }).catch((err: any) => {
+      if (err.stderr?.includes("You are not logged in or your token is invalid")) {
+        return res.status(400).json({
+          message: "It seems your genezio token is invalid. Please generate a new one and try again.",
+        });
+      }
+
+      if (err.stderr?.includes("You've hit the maximum number of projects.")) {
+        return res.status(400).json({
+          message: "You have reached the maximum number of projects allowed. To continue, please upgrade your subscription.",
+        });
+      }
       console.log("genezio deploy err", err);
       return err;
     });
@@ -94,7 +105,7 @@ router.post("/", async (req, res) => {
 
 
     if (!output.stdout?.includes("Your backend project has been deployed")) {
-      console.log("CONTINUE WITH NEXT ITERATION");
+      console.log("[DEBUG] CONTINUE WITH NEXT ITERATION");
       continue;
     }
 
